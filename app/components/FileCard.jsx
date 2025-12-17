@@ -14,7 +14,7 @@ export default function FileCard({ item, onClick, onDoubleClick, isSelected }) {
       <div className="text-6xl mb-4 text-gray-600">
         {item.type === 'folder' ? '📁' : item.fileType === 'image' ? '🖼️' : '📄'}
       </div>
-      <div className="text-sm font-medium text-gray-800 text-center line-clamp-2" title={item.name}>
+      <div className="text-sm font-medium text-gray-800 text-center break-all" title={item.name}>
         {item.name}
       </div>
       {item.type === 'folder' && (
