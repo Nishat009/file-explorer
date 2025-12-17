@@ -1,0 +1,30 @@
+"use client";
+
+import React from 'react';
+
+export default function EditorModal({ editingFile, editText, setEditText, onSave, onClose }) {
+  if (!editingFile) return null;
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-4xl max-h-[90vh] overflow-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-bold">Editing: {editingFile.name}</h3>
+          <button className="text-2xl" onClick={onClose}>
+            ×
+          </button>
+        </div>
+        <div>
+          <textarea className="w-full h-96 p-2 border rounded" value={editText} onChange={(e) => setEditText(e.target.value)} />
+          <div className="mt-4">
+            <button className="bg-blue-500 text-white px-4 py-2 rounded mr-2" onClick={() => onSave(editText)}>
+              Save
+            </button>
+            <button className="bg-gray-500 text-white px-4 py-2 rounded" onClick={onClose}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
