@@ -100,9 +100,11 @@ export default function UniversalModal({ config, onClose, actions }) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={
-              mode === 'create-text' ? 'newfile.txt' :
-              mode === 'rename' ? item?.name || '' :
-              'New Folder'
+              mode === 'create-text'
+                ? 'newfile.txt'
+                : mode === 'rename' && item?.fileType === 'text'
+                  ? item?.name?.replace('.txt', '') || ''  // Show without .txt for cleaner input
+                  : item?.name || ''
             }
             className="w-full p-3 border border-gray-300 rounded-lg mb-6"
             autoFocus
@@ -182,26 +184,25 @@ export default function UniversalModal({ config, onClose, actions }) {
     'edit-text': 'Save',
   }[mode];
 
-  const actionColor = mode === 'delete' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700';
+  const actionColor = mode === 'delete' ? 'bg-red-600 hover:bg-red-700 cursor-pointer' : 'bg-blue-600 hover:bg-blue-700 cursor-pointer';
 
   const isDisabled =
     (mode === 'upload-image' && !file) ||
     (['create-folder', 'create-text', 'rename'].includes(mode) && !name.trim());
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-[#0000008b] bg-opacity-60 flex items-center justify-center z-50">
       <div
-        className={`bg-white rounded-2xl shadow-2xl p-8 overflow-auto ${
-          mode === 'view-file' || mode === 'edit-text'
-            ? 'max-w-5xl max-h-[95vh]'
-            : 'max-w-lg'
-        }`}
+        className={`bg-white rounded-2xl shadow-2xl p-5 overflow-auto ${mode === 'view-file' || mode === 'edit-text'
+            ? 'w-lg max-w-5xl max-h-[95vh]'
+            : 'w-lg max-w-5xl max-h-[90vh]'
+          }`}
       >
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-2xl font-bold text-gray-800">{title}</h3>
           <button
             onClick={onClose}
-            className="text-4xl text-gray-400 hover:text-gray-600 transition"
+            className="text-4xl text-gray-400 hover:text-gray-600 transition cursor-pointer"
           >
             ×
           </button>
@@ -221,11 +222,10 @@ export default function UniversalModal({ config, onClose, actions }) {
             <button
               onClick={handleAction}
               disabled={isDisabled}
-              className={`px-6 py-3 text-white rounded-lg transition font-medium ${
-                isDisabled
+              className={`px-6 py-3 text-white rounded-lg transition font-medium ${isDisabled
                   ? 'bg-gray-400 cursor-not-allowed'
                   : actionColor
-              }`}
+                }`}
             >
               {actionLabel}
             </button>

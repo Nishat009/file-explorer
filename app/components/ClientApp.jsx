@@ -6,6 +6,7 @@ import FileGrid from './FileGrid';
 import Toolbar from './Toolbar';
 import UniversalModal from './UniversalModal';
 import useFiles from '../hooks/useFiles';
+import { Toaster } from 'react-hot-toast';
 
 export default function ClientApp() {
   const { fs, currentFolder, selectedItem, actions } = useFiles();
@@ -52,6 +53,7 @@ export default function ClientApp() {
           onItemDoubleClick={handleItemDoubleClick}
           selectedItem={selectedItem}
           view={view}
+          setModalConfig={setModalConfig} // Pass setModalConfig to FileGrid
         />
       </div>
 
@@ -60,6 +62,8 @@ export default function ClientApp() {
         onClose={() => setModalConfig(null)}
         actions={actions}
       />
+
+      <Toaster position="bottom-right" />
     </div>
   );
 }

@@ -5,21 +5,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FolderPlus, FileText, Image, Grid, List } from "lucide-react";
-import toast from 'react-hot-toast';
 
 export default function Toolbar({ actions, view, onViewChange, selectedItem, setModalConfig }) {
   const handleCreate = (mode) => {
     setModalConfig({ mode });
-  };
-
-  const handleRename = () => {
-    if (!selectedItem) return toast.error('Please select an item to rename.');
-    setModalConfig({ mode: 'rename', item: selectedItem });
-  };
-
-  const handleDelete = () => {
-    if (!selectedItem) return toast.error('Please select an item to delete.');
-    setModalConfig({ mode: 'delete', item: selectedItem });
   };
 
   return (
@@ -46,13 +35,6 @@ export default function Toolbar({ actions, view, onViewChange, selectedItem, set
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-
-        <Button variant="secondary" onClick={handleRename}>
-          Rename
-        </Button>
-        <Button variant="destructive" onClick={handleDelete}>
-          Delete
-        </Button>
       </div>
 
       {/* Grid / List View Toggle using shadcn Tabs */}
@@ -60,11 +42,9 @@ export default function Toolbar({ actions, view, onViewChange, selectedItem, set
         <TabsList>
           <TabsTrigger value="grid" className="flex items-center gap-2">
             <Grid className="h-4 w-4" />
-            Grid
           </TabsTrigger>
           <TabsTrigger value="list" className="flex items-center gap-2">
             <List className="h-4 w-4" />
-            List
           </TabsTrigger>
         </TabsList>
       </Tabs>

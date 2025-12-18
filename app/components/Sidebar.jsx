@@ -2,8 +2,8 @@ import FileTree from "./FileTree";
 
 export default function Sidebar({ fs, currentFolder, actions }) {
   return (
-    <div className="w-64 bg-gray-900 text-gray-100 p-6 overflow-y-auto border-r border-gray-800">
-      <h3 className="text-lg font-semibold mb-6 text-white">Folders</h3>
+    <div className="w-72 bg-gray-900 text-gray-100 p-6 overflow-y-auto border-r border-gray-800">
+      <h3 className="text-lg font-semibold mb-6 text-white">Files</h3>
       <div className="space-y-1">
         <div
           className={`flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800 cursor-pointer transition-colors ${
