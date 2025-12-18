@@ -48,7 +48,7 @@ export default function useFiles() {
             const parsed = JSON.parse(saved);
             setFs(parsed);
             setCurrentFolder(findNode(parsed, parsed.id) || parsed);
-          } catch (_) {}
+          } catch (_) { }
         }
       }
     };
@@ -72,17 +72,17 @@ export default function useFiles() {
 
   // Save to server (fire and forget)
   const saveFs = (mutateFn) => {
- setFs((prevFs) => {
-  const copy = JSON.parse(JSON.stringify(prevFs));
-  mutateFn(copy);
+    setFs((prevFs) => {
+      const copy = JSON.parse(JSON.stringify(prevFs));
+      mutateFn(copy);
 
-  // This line forces currentFolder to update with the new tree
-  const newCurrent = findNode(copy, currentFolder.id) || copy;
-  setCurrentFolder(newCurrent);
+      // This line forces currentFolder to update with the new tree
+      const newCurrent = findNode(copy, currentFolder.id) || copy;
+      setCurrentFolder(newCurrent);
 
-  return copy;
-});
-};
+      return copy;
+    });
+  };
 
   const actions = {
     find: (id) => findNode(fs, id),
@@ -105,163 +105,161 @@ export default function useFiles() {
       if (node) setSelectedItem(node);
     },
 
-  createFolder: (name) => {
-  const trimmedName = name.trim();
-  if (!trimmedName) {
-    toast.error('Folder name cannot be empty');
-    return;
-  }
-
-  const newFolder = {
-    id: uuid(),
-    name: trimmedName,
-    type: 'folder',
-    children: [],
-    opened: false,
-  };
-
-  saveFs((root) => {
-    const target = findNode(root, currentFolder.id) || root;
-    if (!target.children) target.children = [];
-    // Push creates new array reference
-    target.children = [...target.children, newFolder];
-  });
-
-  toast.success(`Folder "${trimmedName}" created`);
-},
-
-createTextFile: (name) => {
-  const trimmedName = name.trim();
-  if (!trimmedName) {
-    toast.error('File name cannot be empty');
-    return;
-  }
-  const finalName = trimmedName.endsWith('.txt') ? trimmedName : `${trimmedName}.txt`;
-
-  const newFile = {
-    id: uuid(),
-    name: finalName,
-    type: 'file',
-    fileType: 'text',
-    content: '',
-  };
-
-  saveFs((root) => {
-    const target = findNode(root, currentFolder.id) || root;
-    if (!target.children) target.children = [];
-    target.children = [...target.children, newFile];
-  });
-
-  toast.success(`Text file "${finalName}" created`);
-},
-
-uploadFile: (rawFile) => {
-  if (!rawFile || !rawFile.type.startsWith('image/')) {
-    toast.error('Only image files are supported');
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const newFile = {
-      id: uuid(),
-      name: rawFile.name,
-      type: 'file',
-      fileType: 'image',
-      content: e.target.result,
-      size: rawFile.size,
-    };
-
-    saveFs((root) => {
-      const target = findNode(root, currentFolder.id) || root;
-      if (!target.children) target.children = [];
-      target.children = [...target.children, newFile];
-    });
-
-    toast.success(`Image "${rawFile.name}" uploaded`);
-  };
-  reader.readAsDataURL(rawFile);
-},
-
-renameItem: (id, newName) => {
-  let trimmedName = newName?.trim();
-  if (!id || !trimmedName) {
-    toast.error('Name cannot be empty');
-    return;
-  }
-
-  let oldName = '';
-  let oldFileType = '';
-  let success = false;
-
-  saveFs((root) => {
-    const walk = (node) => {
-      if (node.id === id) {
-        oldName = node.name;
-        oldFileType = node.fileType;
-
-        // If it was a text file, ensure it keeps .txt
-        if (oldFileType === 'text' && !trimmedName.endsWith('.txt')) {
-          trimmedName = trimmedName + '.txt';
-        }
-
-        node.name = trimmedName;
-        success = true;
-        return true;
+    createFolder: (name) => {
+      const trimmedName = name.trim();
+      if (!trimmedName) {
+        toast.error('Folder name cannot be empty');
+        return;
       }
-      if (node.children) {
-        for (const child of node.children) {
-          if (walk(child)) return true;
-        }
+
+      const newFolder = {
+        id: uuid(),
+        name: trimmedName,
+        type: 'folder',
+        children: [],
+        opened: false,
+      };
+
+      saveFs((root) => {
+        const target = findNode(root, currentFolder.id) || root;
+        if (!target.children) target.children = [];
+        // Push creates new array reference
+        target.children = [...target.children, newFolder];
+      });
+
+      toast.success(`Folder "${trimmedName}" created`);
+    },
+
+    createTextFile: (name) => {
+      const trimmedName = name.trim();
+      if (!trimmedName) {
+        toast.error('File name cannot be empty');
+        return;
       }
-      return false;
-    };
-    walk(root);
-  });
+      const finalName = trimmedName.endsWith('.txt') ? trimmedName : `${trimmedName}.txt`;
 
-  if (success) {
-    toast.success(`"${oldName}" renamed to "${trimmedName}"`);
-  }
-},
+      const newFile = {
+        id: uuid(),
+        name: finalName,
+        type: 'file',
+        fileType: 'text',
+        content: '',
+      };
 
-deleteItem: (id) => {
-  if (!id) return;
+      saveFs((root) => {
+        const target = findNode(root, currentFolder.id) || root;
+        if (!target.children) target.children = [];
+        target.children = [...target.children, newFile];
+      });
 
-  let deletedName = '';
+      toast.success(`Text file "${finalName}" created`);
+    },
 
-  saveFs((root) => {
-    const remove = (node) => {
-      if (!node.children) return false;
-      const idx = node.children.findIndex((c) => c.id === id);
-      if (idx !== -1) {
-        deletedName = node.children[idx].name;
-        // Create new array without the deleted item
-        node.children = node.children.filter((_, i) => i !== idx);
-        return true;
+    uploadFile: (rawFile) => {
+      if (!rawFile || !rawFile.type.startsWith('image/')) {
+        toast.error('Only image files are supported');
+        return;
       }
-      for (const child of node.children) {
-        if (remove(child)) return true;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const newFile = {
+          id: uuid(),
+          name: rawFile.name,
+          type: 'file',
+          fileType: 'image',
+          content: e.target.result,
+          size: rawFile.size,
+        };
+
+        saveFs((root) => {
+          const target = findNode(root, currentFolder.id) || root;
+          if (!target.children) target.children = [];
+          target.children = [...target.children, newFile];
+        });
+
+        toast.success(`Image "${rawFile.name}" uploaded`);
+      };
+      reader.readAsDataURL(rawFile);
+    },
+
+    renameItem: (id, newName) => {
+      let trimmedName = newName?.trim();
+      if (!id || !trimmedName) {
+        toast.error('Name cannot be empty');
+        return;
       }
-      return false;
-    };
-    remove(root);
-  });
 
-  setSelectedItem(null);
-  if (currentFolder.id === id) {
-    setCurrentFolder(fs); // fallback to root
-  }
+      let oldName = '';
+      let oldFileType = '';
+      let success = false;
 
-  toast.success(`"${deletedName}" deleted`, { style: { background: '#ef4444', color: '#fff' } });
-},
-    saveFile: (id, content) => {
-      if (!id) return;
-
-      let fileName = '';
       saveFs((root) => {
         const walk = (node) => {
           if (node.id === id) {
-            fileName = node.name;
+            oldName = node.name;
+            oldFileType = node.fileType;
+
+            // If it was a text file, ensure it keeps .txt
+            if (oldFileType === 'text' && !trimmedName.endsWith('.txt')) {
+              trimmedName = trimmedName + '.txt';
+            }
+
+            node.name = trimmedName;
+            success = true;
+            return true;
+          }
+          if (node.children) {
+            for (const child of node.children) {
+              if (walk(child)) return true;
+            }
+          }
+          return false;
+        };
+        walk(root);
+      });
+
+      if (success) {
+        toast.success(`"${oldName}" renamed to "${trimmedName}"`);
+      }
+    },
+
+    deleteItem: (id) => {
+      if (!id) return;
+
+      let deletedName = '';
+
+      saveFs((root) => {
+        const remove = (node) => {
+          if (!node.children) return false;
+          const idx = node.children.findIndex((c) => c.id === id);
+          if (idx !== -1) {
+            deletedName = node.children[idx].name;
+            // Create new array without the deleted item
+            node.children = node.children.filter((_, i) => i !== idx);
+            return true;
+          }
+          for (const child of node.children) {
+            if (remove(child)) return true;
+          }
+          return false;
+        };
+        remove(root);
+      });
+
+      setSelectedItem(null);
+      if (currentFolder.id === id) {
+        setCurrentFolder(fs); // fallback to root
+      }
+
+      toast.success(`"${deletedName}" deleted`, { style: { background: '#ef4444', color: '#fff' } });
+    },
+    saveFileSilent: (id, content) => {
+      if (!id) return;
+
+      saveFs((root) => {
+        const walk = (node) => {
+          if (node.id === id) {
             node.content = content;
             return true;
           }
@@ -274,11 +272,34 @@ deleteItem: (id) => {
         };
         walk(root);
       });
-
-      if (fileName) {
-        toast.success(`"${fileName}" saved`);
-      }
     },
+
+   saveFile: (id, content) => {
+  if (!id) return;
+
+  let fileName = '';
+
+  saveFs((root) => {
+    const updateNode = (node) => {
+      if (node.id === id) {
+        fileName = node.name;
+        return { ...node, content };
+      }
+      if (node.children) {
+        return { ...node, children: node.children.map(updateNode) };
+      }
+      return node;
+    };
+
+    return updateNode(root);
+  });
+
+  if (fileName) {
+    toast.success(`"${fileName}" saved`);
+  }
+},
+
+
 
     toggleOpen: (id) => {
       saveFs((root) => {

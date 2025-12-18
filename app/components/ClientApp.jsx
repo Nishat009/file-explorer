@@ -7,14 +7,15 @@ import Toolbar from './Toolbar';
 import UniversalModal from './UniversalModal';
 import useFiles from '../hooks/useFiles';
 import { Toaster } from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 export default function ClientApp() {
   const { fs, currentFolder, selectedItem, actions } = useFiles();
   const [view, setView] = useState('grid');
   const [modalConfig, setModalConfig] = useState(null);
-
+  const router = useRouter();
   const handleItemClick = (id) => {
-    actions.select(id); // single click → select only
+    actions.select(id);
   };
 
   const handleItemDoubleClick = (id) => {
@@ -22,17 +23,39 @@ export default function ClientApp() {
     if (!item) return;
 
     if (item.type === 'folder') {
-      actions.setCurrent(id); // navigate to folder
-    } else if (item.fileType === 'text') {
-      setModalConfig({ mode: 'edit-text', item, initialContent: item.content || '' });
+      actions.setCurrent(id);
+    } else {
+      router.push(`/view/${id}`);
+    }
+  };
+
+  // Central handler for opening files (used by both grid and sidebar)
+  const handleOpenFile = (id) => {
+    const item = actions.find(id);
+    if (!item || item.type === 'folder') return;
+
+    if (item.fileType === 'text') {
+      setModalConfig({
+        mode: 'edit-text',
+        item,
+        initialContent: item.content || '',
+      });
     } else if (item.fileType === 'image') {
-      setModalConfig({ mode: 'view-file', item });
+      setModalConfig({
+        mode: 'view-file',
+        item,
+      });
     }
   };
 
   return (
     <div className="flex h-screen">
-      <Sidebar fs={fs} currentFolder={currentFolder} actions={actions} />
+      <Sidebar
+        fs={fs}
+        currentFolder={currentFolder}
+        actions={actions}
+        onOpenFile={handleOpenFile}  // ← Critical: pass to sidebar
+      />
 
       <div className="flex-1 bg-gray-50 p-8 overflow-y-auto">
         <Toolbar
@@ -53,7 +76,7 @@ export default function ClientApp() {
           onItemDoubleClick={handleItemDoubleClick}
           selectedItem={selectedItem}
           view={view}
-          setModalConfig={setModalConfig} // Pass setModalConfig to FileGrid
+          setModalConfig={setModalConfig}
         />
       </div>
 

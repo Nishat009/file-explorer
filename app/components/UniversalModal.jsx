@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import React, { useState, useEffect, useMemo } from 'react';
 
 export default function UniversalModal({ config, onClose, actions }) {
@@ -85,8 +86,8 @@ export default function UniversalModal({ config, onClose, actions }) {
     'upload-image': 'Upload Image',
     'rename': `Rename ${item?.type === 'folder' ? 'Folder' : 'File'}`,
     'delete': `Delete ${item?.type === 'folder' ? 'Folder' : 'File'}`,
-    'edit-text': `Edit ${item?.name}`,
-    'view-file': `View ${item?.name}`,
+    'edit-text': `Editing: ${item?.name}`,
+  'view-file': `Preview: ${item?.name}`,
   }[mode];
 
   const renderContent = () => {
@@ -94,22 +95,29 @@ export default function UniversalModal({ config, onClose, actions }) {
       case 'create-folder':
       case 'create-text':
       case 'rename':
+        const isTextFile = item?.fileType === 'text';
+        const nameWithoutExtension = isTextFile
+          ? item?.name?.replace(/\.txt$/i, '') || ''
+          : item?.name || '';
+        const extension = isTextFile ? '.txt' : '';
+
         return (
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder={
-              mode === 'create-text'
-                ? 'newfile.txt'
-                : mode === 'rename' && item?.fileType === 'text'
-                  ? item?.name?.replace('.txt', '') || ''  // Show without .txt for cleaner input
-                  : item?.name || ''
-            }
-            className="w-full p-3 border border-gray-300 rounded-lg mb-6"
-            autoFocus
-            onFocus={(e) => e.target.select()}
-          />
+          <div className="flex items-center gap-2 mb-6">
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter new name"
+              className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              autoFocus
+              onFocus={(e) => e.target.select()}
+            />
+            {isTextFile && (
+              <span className="px-3 py-3 bg-gray-100 text-gray-500 font-medium rounded-lg">
+                .txt
+              </span>
+            )}
+          </div>
         );
 
       case 'upload-image':
@@ -159,13 +167,13 @@ export default function UniversalModal({ config, onClose, actions }) {
         );
 
       case 'view-file':
+        if (!item?.content) return <p>No preview available</p>;
         return (
-          <div className="flex justify-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
+          <div className="flex justify-center items-center h-full">
             <img
-              src={item?.content}
-              alt={item?.name}
-              className="max-w-full max-h-[80vh] rounded-lg shadow-xl"
+              src={item.content}
+              alt={item.name}
+              className="max-w-full max-h-[70vh] rounded-xl shadow-2xl border border-gray-200"
             />
           </div>
         );
@@ -194,12 +202,12 @@ export default function UniversalModal({ config, onClose, actions }) {
     <div className="fixed inset-0 bg-[#0000008b] bg-opacity-60 flex items-center justify-center z-50">
       <div
         className={`bg-white rounded-2xl shadow-2xl p-5 overflow-auto ${mode === 'view-file' || mode === 'edit-text'
-            ? 'w-lg max-w-5xl max-h-[95vh]'
-            : 'w-lg max-w-5xl max-h-[90vh]'
+          ? 'w-lg max-w-5xl max-h-[95vh]'
+          : 'w-lg max-w-5xl max-h-[90vh]'
           }`}
       >
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-2xl font-bold text-gray-800">{title}</h3>
+          <h3 className="text-2xl font-bold break-all text-gray-800">{title}</h3>
           <button
             onClick={onClose}
             className="text-4xl text-gray-400 hover:text-gray-600 transition cursor-pointer"
@@ -223,8 +231,8 @@ export default function UniversalModal({ config, onClose, actions }) {
               onClick={handleAction}
               disabled={isDisabled}
               className={`px-6 py-3 text-white rounded-lg transition font-medium ${isDisabled
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : actionColor
+                ? 'bg-gray-400 cursor-not-allowed'
+                : actionColor
                 }`}
             >
               {actionLabel}
