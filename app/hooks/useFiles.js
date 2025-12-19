@@ -24,6 +24,26 @@ function findNode(root, id) {
   return null;
 }
 
+// Find parent node of a given node id
+function findParentNode(root, id, parent = null) {
+  if (!root) return null;
+  if (root.id === id) return parent;
+  if (!root.children) return null;
+  for (const child of root.children) {
+    const found = findParentNode(child, id, root);
+    if (found !== null) return found;
+  }
+  return null;
+}
+
+// Check if a name already exists in a folder's children (case-sensitive)
+function nameExists(folder, name, excludeId = null) {
+  if (!folder || !folder.children) return false;
+  return folder.children.some(
+    (child) => child.name === name && child.id !== excludeId
+  );
+}
+
 // Load initial state from localStorage
 function loadInitialState() {
   if (typeof window === 'undefined') return defaultRoot;
@@ -103,6 +123,13 @@ export default function useFiles() {
         return;
       }
 
+      // Check for duplicate name in current folder
+      const target = findNode(fs, currentFolder.id) || fs;
+      if (nameExists(target, trimmedName)) {
+        toast.error(`A folder or file named "${trimmedName}" already exists`);
+        return;
+      }
+
       const newFolder = {
         id: uuid(),
         name: trimmedName,
@@ -129,6 +156,13 @@ export default function useFiles() {
       }
       const finalName = trimmedName.endsWith('.txt') ? trimmedName : `${trimmedName}.txt`;
 
+      // Check for duplicate name in current folder
+      const target = findNode(fs, currentFolder.id) || fs;
+      if (nameExists(target, finalName)) {
+        toast.error(`A file or folder named "${finalName}" already exists`);
+        return;
+      }
+
       const newFile = {
         id: uuid(),
         name: finalName,
@@ -149,6 +183,13 @@ export default function useFiles() {
     uploadFile: (rawFile) => {
       if (!rawFile || !rawFile.type.startsWith('image/')) {
         toast.error('Only image files are supported');
+        return;
+      }
+
+      // Check for duplicate name in current folder
+      const target = findNode(fs, currentFolder.id) || fs;
+      if (nameExists(target, rawFile.name)) {
+        toast.error(`A file or folder named "${rawFile.name}" already exists`);
         return;
       }
 
@@ -181,21 +222,38 @@ export default function useFiles() {
         return;
       }
 
-      let oldName = '';
-      let oldFileType = '';
+      // Find the item being renamed
+      const itemToRename = findNode(fs, id);
+      if (!itemToRename) {
+        toast.error('Item not found');
+        return;
+      }
+
+      let oldName = itemToRename.name;
+      let oldFileType = itemToRename.fileType;
+
+      // If it was a text file, ensure it keeps .txt
+      if (oldFileType === 'text' && !trimmedName.endsWith('.txt')) {
+        trimmedName = trimmedName + '.txt';
+      }
+
+      // If the name hasn't changed, no need to check duplicates
+      if (oldName === trimmedName) {
+        return; // Same name, no change needed
+      }
+
+      // Find the parent folder to check for duplicates
+      const parentFolder = findParentNode(fs, id) || fs;
+      if (nameExists(parentFolder, trimmedName, id)) {
+        toast.error(`A file or folder named "${trimmedName}" already exists in this folder`);
+        return;
+      }
+
       let success = false;
 
       saveFs((root) => {
         const walk = (node) => {
           if (node.id === id) {
-            oldName = node.name;
-            oldFileType = node.fileType;
-
-            // If it was a text file, ensure it keeps .txt
-            if (oldFileType === 'text' && !trimmedName.endsWith('.txt')) {
-              trimmedName = trimmedName + '.txt';
-            }
-
             node.name = trimmedName;
             success = true;
             return true;
