@@ -19,35 +19,39 @@ export default function ClientApp() {
 
   // Handle responsive sidebar: always open on desktop, collapsed on mobile
   useEffect(() => {
-    const checkScreenSize = () => {
-      const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
-      // On desktop, always open sidebar; on mobile, keep it collapsed
-      if (isDesktop) {
-        setSidebarCollapsed(false);
-      } else {
-        setSidebarCollapsed(true);
-      }
+    // Set initial state based on screen size
+    const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
+    setSidebarCollapsed(!isDesktop);
+
+    // Only update on actual screen size category changes (mobile ↔ desktop)
+    const handleResize = () => {
+      const isDesktopNow = window.matchMedia('(min-width: 1024px)').matches;
+      // Only update if transitioning between mobile and desktop
+      setSidebarCollapsed((prev) => {
+        // If switching to desktop, always open
+        if (isDesktopNow) return false;
+        // If switching to mobile, keep current state (don't force collapse)
+        return prev;
+      });
     };
 
-    // Check on mount
-    checkScreenSize();
-
-    // Listen for resize events
-    window.addEventListener('resize', checkScreenSize);
-    return () => window.removeEventListener('resize', checkScreenSize);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
   const handleItemClick = (id) => {
-    actions.select(id);
-  };
-
-  const handleItemDoubleClick = (id) => {
     const item = actions.find(id);
     if (!item) return;
 
+    // Single click to open files/folders
     if (item.type === 'folder') {
       actions.setCurrent(id);
     } else {
-      router.push(`/view/${id}`);
+      // Open files
+      if (item.fileType === 'text') {
+        router.push(`/view/${id}`);
+      } else if (item.fileType === 'image') {
+        router.push(`/view/${id}`);
+      }
     }
   };
 
@@ -85,6 +89,13 @@ export default function ClientApp() {
             setSidebarCollapsed(!sidebarCollapsed);
           }
         }}
+        onItemClick={() => {
+          // Close sidebar on mobile when item is clicked
+          const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
+          if (!isDesktop) {
+            setSidebarCollapsed(true);
+          }
+        }}
       />
 
       <div className="flex-1 flex flex-col bg-gray-50 overflow-hidden">
@@ -115,7 +126,6 @@ export default function ClientApp() {
         <FileGrid
           items={currentFolder?.children || []}
           onItemClick={handleItemClick}
-          onItemDoubleClick={handleItemDoubleClick}
           selectedItem={selectedItem}
           view={view}
           setModalConfig={setModalConfig}

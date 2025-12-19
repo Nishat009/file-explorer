@@ -2,85 +2,94 @@
 
 import { useState, useEffect } from "react";
 import FileTree from "./FileTree";
-import { Menu, X } from "lucide-react";
+import { X } from "lucide-react";
 
-export default function Sidebar({ fs, currentFolder, actions, onOpenFile, isCollapsed, onToggleCollapse }) {
-  const [isDesktop, setIsDesktop] = useState(false);
+export default function Sidebar({
+  fs,
+  currentFolder,
+  actions,
+  onItemClick,
+  isCollapsed,
+  onToggleCollapse,
+}) {
+  const [isDesktop, setIsDesktop] = useState(
+    typeof window !== "undefined"
+      ? window.matchMedia("(min-width: 1024px)").matches
+      : false
+  );
 
   useEffect(() => {
-    const checkScreenSize = () => {
-      setIsDesktop(window.matchMedia('(min-width: 1024px)').matches);
-    };
+    const media = window.matchMedia("(min-width: 1024px)");
+    const handler = () => setIsDesktop(media.matches);
 
-    checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    return () => window.removeEventListener('resize', checkScreenSize);
+    media.addEventListener("change", handler);
+    return () => media.removeEventListener("change", handler);
   }, []);
 
-  // On desktop, sidebar is always visible (not collapsed)
-  const shouldShow = isDesktop || !isCollapsed;
+  // Desktop: always visible
+  const showSidebar = isDesktop || !isCollapsed;
 
   return (
     <>
       {/* Mobile overlay */}
-      {shouldShow && !isDesktop && (
+      {!isDesktop && showSidebar && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 z-40"
           onClick={onToggleCollapse}
         />
       )}
-      
+
       {/* Sidebar */}
-      <div
+      <aside
         className={`
           fixed lg:static inset-y-0 left-0 z-50
-          bg-slate-900 text-slate-100 border-r border-slate-700/50
-          transition-transform duration-300 ease-in-out
-          ${shouldShow ? 'translate-x-0' : '-translate-x-full'}
-          ${shouldShow ? 'w-64' : 'w-0'}
-          overflow-hidden shadow-xl
+          w-64 bg-slate-900 text-slate-100
+          border-r border-slate-700/50
+          transition-transform duration-300
+          ${showSidebar ? "translate-x-0" : "-translate-x-full"}
         `}
       >
         <div className="h-full flex flex-col">
-          {/* Header with toggle button */}
-          <div className="p-5 border-b border-slate-700/50 bg-slate-800/50 flex items-center justify-between">
-            <h3 className="text-base font-bold text-white tracking-wide uppercase">File Explorer</h3>
+          {/* Header */}
+          <div className="p-5 border-b border-slate-700/50 flex justify-between">
+            <h3 className="font-bold uppercase text-sm">File Explorer</h3>
+
             {!isDesktop && (
               <button
                 onClick={onToggleCollapse}
-                className="text-slate-400 hover:text-white transition-colors p-1 rounded hover:bg-slate-700"
-                aria-label="Close sidebar"
+                className="text-slate-400 hover:text-white"
               >
-                <X className="h-5 w-5" />
+                <X size={18} />
               </button>
             )}
           </div>
-          
-          {/* File tree */}
-          <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-            <div className="space-y-0.5">
-              <div
-                className={`flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-slate-800/70 cursor-pointer transition-all duration-150 ${
-                  currentFolder?.id === fs.id ? 'bg-blue-600/20 text-blue-300 border-l-2 border-blue-500' : ''
+
+          {/* File Tree */}
+          <div className="flex-1 overflow-y-auto p-4">
+            <div
+              className={`flex items-center gap-2 px-3 py-2 rounded cursor-pointer
+                ${currentFolder?.id === fs.id
+                  ? "bg-blue-600/20 text-blue-300"
+                  : "hover:bg-slate-800"
                 }`}
-                onClick={() => actions.setCurrent(fs.id)}
-              >
-                <span className="text-xl">📁</span>
-                <span className="font-medium text-sm">{fs.name}</span>
-              </div>
-              {(fs.children || []).map((child) => (
-                <FileTree
-                  key={child.id}
-                  node={child}
-                  actions={actions}
-                  currentFolderId={currentFolder?.id}
-                  depth={1}
-                />
-              ))}
+              onClick={() => actions.setCurrent(fs.id)}
+            >
+              📁 {fs.name}
             </div>
+
+            {(fs.children || []).map(child => (
+              <FileTree
+                key={child.id}
+                node={child}
+                actions={actions}
+                currentFolderId={currentFolder?.id}
+                depth={1}
+                onItemClick={onItemClick}
+              />
+            ))}
           </div>
         </div>
-      </div>
+      </aside>
     </>
   );
 }

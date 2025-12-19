@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal, Edit, Trash } from "lucide-react";
 import toast from 'react-hot-toast';
 
-export default function FileGrid({ items, onItemClick, onItemDoubleClick, selectedItem, view = 'grid', setModalConfig }) {
+export default function FileGrid({ items, onItemClick, selectedItem, view = 'grid', setModalConfig }) {
   const handleRename = (item) => {
     if (!item) return toast.error('Item not found');
     setModalConfig({ mode: 'rename', item });
@@ -25,9 +25,8 @@ export default function FileGrid({ items, onItemClick, onItemDoubleClick, select
               selectedItem?.id === item.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
             }`}
             onClick={() => onItemClick(item.id)}
-            onDoubleClick={() => onItemDoubleClick(item.id)}
           >
-            <div className="text-3xl flex-shrink-0">
+            <div className="text-3xl shrink-0">
               {item.type === 'folder' ? '📁' :
                 item.fileType === 'image' ? '🖼️' :
                   item.fileType === 'text' ? '📄' : '📄'}
@@ -45,7 +44,7 @@ export default function FileGrid({ items, onItemClick, onItemDoubleClick, select
                       : 'File'}
               </div>
             </div>
-            <div className="flex items-center flex-shrink-0">
+            <div className="flex items-center shrink-0">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="p-1 hover:bg-gray-200">
@@ -77,7 +76,6 @@ export default function FileGrid({ items, onItemClick, onItemDoubleClick, select
           key={item.id}
           item={item}
           onClick={() => onItemClick(item.id)}
-          onDoubleClick={() => onItemDoubleClick(item.id)}
           isSelected={selectedItem?.id === item.id}
           onRename={() => handleRename(item)}
           onDelete={() => handleDelete(item)}

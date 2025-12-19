@@ -21,22 +21,24 @@ export default function FileViewerPage() {
 
   // Handle responsive sidebar: always open on desktop, collapsed on mobile
   useEffect(() => {
-    const checkScreenSize = () => {
-      const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
-      // On desktop, always open sidebar; on mobile, keep it collapsed
-      if (isDesktop) {
-        setSidebarCollapsed(false);
-      } else {
-        setSidebarCollapsed(true);
-      }
+    // Set initial state based on screen size
+    const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
+    setSidebarCollapsed(!isDesktop);
+
+    // Only update on actual screen size category changes (mobile ↔ desktop)
+    const handleResize = () => {
+      const isDesktopNow = window.matchMedia('(min-width: 1024px)').matches;
+      // Only update if transitioning between mobile and desktop
+      setSidebarCollapsed((prev) => {
+        // If switching to desktop, always open
+        if (isDesktopNow) return false;
+        // If switching to mobile, keep current state (don't force collapse)
+        return prev;
+      });
     };
 
-    // Check on mount
-    checkScreenSize();
-
-    // Listen for resize events
-    window.addEventListener('resize', checkScreenSize);
-    return () => window.removeEventListener('resize', checkScreenSize);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   /* ---------------- Load file ---------------- */
@@ -83,24 +85,24 @@ export default function FileViewerPage() {
 const hasUnsavedChanges = item ? currentContent !== originalContent : false;
   /* ---------------- Actions ---------------- */
   const handleManualSave = () => {
-  if (!item) return;
+    if (!item) return;
 
-  // Save the content to FS
-  actions.saveFile(item.id, currentContent);
+    // Save the content to FS
+    actions.saveFile(item.id, currentContent);
 
-  // Update local reference of saved content
-  setOriginalContent(currentContent);
-  setHasUnsavedChanges(false);
+    // Update local reference of saved content
+    // hasUnsavedChanges will automatically become false since currentContent === originalContent
+    setOriginalContent(currentContent);
 
-  // Show temporary saved indicator
-  setJustSaved(true);
-  setTimeout(() => setJustSaved(false), 1500);
-};
+    // Show temporary saved indicator
+    setJustSaved(true);
+    setTimeout(() => setJustSaved(false), 1500);
+  };
 
 
   const handleCancel = () => {
+    // Reset content to original - hasUnsavedChanges will automatically become false
     setCurrentContent(originalContent);
-    setHasUnsavedChanges(false);
   };
 
   const handleBack = () => router.back();
@@ -162,6 +164,13 @@ const hasUnsavedChanges = item ? currentContent !== originalContent : false;
             setSidebarCollapsed(!sidebarCollapsed);
           }
         }}
+        onItemClick={() => {
+          // Close sidebar on mobile when item is clicked
+          const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
+          if (!isDesktop) {
+            setSidebarCollapsed(true);
+          }
+        }}
       />
 
       <div className="flex-1 flex flex-col bg-gray-50 overflow-hidden">
@@ -178,7 +187,7 @@ const hasUnsavedChanges = item ? currentContent !== originalContent : false;
 
         {/* Header */}
         <div className="bg-white border-b border-gray-200 px-4 lg:px-8 py-4 flex justify-between items-center shadow-sm">
-          <div className="flex items-center gap-4">
+          <div className="ml-10 md:ml-0 flex items-center gap-4">
             <button
               onClick={handleBack}
               className="flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-800 transition-colors px-2 py-1 rounded hover:bg-blue-50"

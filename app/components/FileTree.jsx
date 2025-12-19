@@ -1,25 +1,23 @@
-import { useState, useEffect } from "react";
 import { ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-export default function FileTree({ node, actions, currentFolderId, depth = 0 }) {
+export default function FileTree({ node, actions, currentFolderId, depth = 0, onItemClick }) {
   const router = useRouter();
-  const [opened, setOpened] = useState(node.opened || false);
-
-  // Sync opened state with node.opened from parent
-  useEffect(() => {
-    setOpened(node.opened || false);
-  }, [node.opened]);
+  // Use node.opened directly from the tree state
+  const opened = node.opened || false;
 
   const handleClick = () => {
     if (node.type === 'folder') {
-      const newOpened = !opened;
-      setOpened(newOpened);
       actions.toggleOpen(node.id);
       actions.setCurrent(node.id); // Navigate main view
+      // Don't close sidebar when navigating folders - user might want to navigate multiple folders
     } else {
       // File clicked → open in dedicated viewer page
       router.push(`/view/${node.id}`);
+      // Only close sidebar when opening a file (not when navigating folders)
+      if (onItemClick) {
+        onItemClick();
+      }
     }
   };
 
@@ -69,6 +67,7 @@ export default function FileTree({ node, actions, currentFolderId, depth = 0 }) 
               actions={actions}
               currentFolderId={currentFolderId}
               depth={depth + 1}
+              onItemClick={onItemClick}
             />
           ))}
         </div>

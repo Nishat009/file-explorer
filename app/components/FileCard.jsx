@@ -6,14 +6,13 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal, Edit, Trash } from "lucide-react";
 import toast from 'react-hot-toast';
 
-export default function FileCard({ item, onClick, onDoubleClick, isSelected, onRename, onDelete }) {
+export default function FileCard({ item, onClick, isSelected, onRename, onDelete }) {
   return (
     <div
       className={`group flex flex-col items-center py-6 px-4 bg-white border rounded-md shadow-sm hover:shadow-lg hover:border-blue-400 transition-all duration-200 cursor-pointer ${
         isSelected ? 'border-blue-500 shadow-lg bg-blue-50/30' : 'border-gray-200'
       }`}
       onClick={onClick}
-      onDoubleClick={onDoubleClick}
     >
       <div className="relative w-full">
         <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10">
@@ -48,7 +47,7 @@ export default function FileCard({ item, onClick, onDoubleClick, isSelected, onR
       {item.type === 'folder' ? (
         <div className="text-xs text-gray-500 mt-1 font-medium">Folder</div>
       ) : (
-        <div className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wide">
+        <div className="text-xs text-gray-500 mt-1 font-medium tracking-wide">
           {item.fileType === 'image' ? 'Image' : item.fileType === 'text' ? 'Text File' : 'File'}
         </div>
       )}

@@ -9,3 +9,5 @@ what is done here:
 6. Text file open and edit
 7. Img preview
 8. Responsiveness
+
+#doubleclick on the file, folder, img to open it.
