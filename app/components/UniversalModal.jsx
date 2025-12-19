@@ -199,18 +199,19 @@ export default function UniversalModal({ config, onClose, actions }) {
     (['create-folder', 'create-text', 'rename'].includes(mode) && !name.trim());
 
   return (
-    <div className="fixed inset-0 bg-[#0000008b] bg-opacity-60 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div
-        className={`bg-white rounded-2xl shadow-2xl p-5 overflow-auto ${mode === 'view-file' || mode === 'edit-text'
-          ? 'w-lg max-w-5xl max-h-[95vh]'
-          : 'w-lg max-w-5xl max-h-[90vh]'
+        className={`bg-white rounded-xl shadow-2xl p-6 overflow-auto border border-gray-200 ${mode === 'view-file' || mode === 'edit-text'
+          ? 'w-full max-w-5xl max-h-[95vh]'
+          : 'w-full max-w-lg max-h-[90vh]'
           }`}
       >
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-2xl font-bold break-all text-gray-800">{title}</h3>
+        <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+          <h3 className="text-xl font-bold break-all text-gray-900">{title}</h3>
           <button
             onClick={onClose}
-            className="text-4xl text-gray-400 hover:text-gray-600 transition cursor-pointer"
+            className="text-3xl text-gray-400 hover:text-gray-600 transition-colors cursor-pointer p-1 rounded hover:bg-gray-100"
+            aria-label="Close"
           >
             ×
           </button>
@@ -218,10 +219,10 @@ export default function UniversalModal({ config, onClose, actions }) {
 
         {renderContent()}
 
-        <div className="flex justify-end gap-4 mt-8">
+        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
           <button
             onClick={onClose}
-            className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
+            className="px-5 py-2.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-all font-medium shadow-sm"
           >
             {mode === 'delete' ? 'Cancel' : 'Close'}
           </button>
@@ -230,10 +231,11 @@ export default function UniversalModal({ config, onClose, actions }) {
             <button
               onClick={handleAction}
               disabled={isDisabled}
-              className={`px-6 py-3 text-white rounded-lg transition font-medium ${isDisabled
-                ? 'bg-gray-400 cursor-not-allowed'
-                : actionColor
-                }`}
+              className={`px-5 py-2.5 text-white rounded-lg transition-all font-medium shadow-md ${
+                isDisabled
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : actionColor
+              }`}
             >
               {actionLabel}
             </button>

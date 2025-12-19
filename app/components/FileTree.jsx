@@ -1,14 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-export default function FileTree({ node, actions, depth = 0 }) {
+export default function FileTree({ node, actions, currentFolderId, depth = 0 }) {
   const router = useRouter();
   const [opened, setOpened] = useState(node.opened || false);
 
+  // Sync opened state with node.opened from parent
+  useEffect(() => {
+    setOpened(node.opened || false);
+  }, [node.opened]);
+
   const handleClick = () => {
     if (node.type === 'folder') {
-      setOpened(!opened);
+      const newOpened = !opened;
+      setOpened(newOpened);
       actions.toggleOpen(node.id);
       actions.setCurrent(node.id); // Navigate main view
     } else {
@@ -30,32 +36,38 @@ export default function FileTree({ node, actions, depth = 0 }) {
 
   const hasChildren = node.type === 'folder' && node.children && node.children.length > 0;
 
+  const isActive = currentFolderId === node.id;
+
   return (
-    <div className={`${depth > 0 ? 'ml-3' : ''}`}>
+    <div className={`${depth > 0 ? 'ml-4' : ''}`}>
       <div
-        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800 cursor-pointer transition-colors select-none"
+        className={`flex items-center gap-2.5 px-3 py-1.5 rounded-md hover:bg-slate-800/70 cursor-pointer transition-all duration-150 select-none ${
+          isActive ? 'bg-blue-600/20 text-blue-300 border-l-2 border-blue-500' : 'text-slate-300'
+        }`}
         onClick={handleClick}
       >
+        
+        {/* Add empty space if no chevron to align icons */}
+        {(!node.type === 'folder' || !hasChildren)}
+
+        <span className="text-lg">{getIcon()}</span>
+        <span className="text-sm font-medium truncate">{node.name}</span>
         {node.type === 'folder' && hasChildren && (
           <ChevronRight
-            size={16}
-            className={`transition-transform duration-200 ${opened ? 'rotate-90' : ''}`}
+            size={14}
+            className={`absolute right-8 transition-transform duration-200 text-slate-400 ${opened ? 'rotate-90' : ''}`}
           />
         )}
-        {/* Add empty space if no chevron to align icons */}
-        {node.type !== 'folder' || !hasChildren && <span className="w-4" />}
-
-        <span className="text-2xl">{getIcon()}</span>
-        <span className="text-sm font-medium truncate">{node.name}</span>
       </div>
 
       {node.type === 'folder' && opened && node.children?.length > 0 && (
-        <div className="mt-1">
+        <div className="mt-0.5 ml-1 border-l border-slate-700/30 pl-2">
           {node.children.map((child) => (
             <FileTree
               key={child.id}
               node={child}
               actions={actions}
+              currentFolderId={currentFolderId}
               depth={depth + 1}
             />
           ))}

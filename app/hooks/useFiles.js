@@ -24,37 +24,28 @@ function findNode(root, id) {
   return null;
 }
 
-export default function useFiles() {
-  const [fs, setFs] = useState(defaultRoot);
-  const [currentFolder, setCurrentFolder] = useState(defaultRoot);
-  const [selectedItem, setSelectedItem] = useState(null);
+// Load initial state from localStorage
+function loadInitialState() {
+  if (typeof window === 'undefined') return defaultRoot;
+  
+  const saved = localStorage.getItem('miniFileExplorer');
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch (_) {
+      return defaultRoot;
+    }
+  }
+  return defaultRoot;
+}
 
-  // Load from server → fallback to localStorage
-  useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      try {
-        const res = await fetch('/api/fs');
-        if (!res.ok) throw new Error('failed');
-        const data = await res.json();
-        if (mounted) {
-          setFs(data);
-          setCurrentFolder(data);
-        }
-      } catch (e) {
-        const saved = localStorage.getItem('miniFileExplorer');
-        if (saved) {
-          try {
-            const parsed = JSON.parse(saved);
-            setFs(parsed);
-            setCurrentFolder(findNode(parsed, parsed.id) || parsed);
-          } catch (_) { }
-        }
-      }
-    };
-    load();
-    return () => { mounted = false };
-  }, []);
+export default function useFiles() {
+  const [fs, setFs] = useState(loadInitialState);
+  const [currentFolder, setCurrentFolder] = useState(() => {
+    const initialState = loadInitialState();
+    return initialState;
+  });
+  const [selectedItem, setSelectedItem] = useState(null);
 
   // Save to localStorage on change
   useEffect(() => {
@@ -277,28 +268,29 @@ export default function useFiles() {
    saveFile: (id, content) => {
   if (!id) return;
 
-  let fileName = '';
+  let fileName = "";
 
   saveFs((root) => {
-    const updateNode = (node) => {
+    const walk = (node) => {
       if (node.id === id) {
         fileName = node.name;
-        return { ...node, content };
+        node.content = content;
+        return true;
       }
       if (node.children) {
-        return { ...node, children: node.children.map(updateNode) };
+        for (const c of node.children) {
+          if (walk(c)) return true;
+        }
       }
-      return node;
+      return false;
     };
-
-    return updateNode(root);
+    walk(root);
   });
 
   if (fileName) {
     toast.success(`"${fileName}" saved`);
   }
 },
-
 
 
     toggleOpen: (id) => {

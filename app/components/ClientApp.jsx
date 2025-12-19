@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import FileGrid from './FileGrid';
 import Toolbar from './Toolbar';
@@ -8,12 +8,34 @@ import UniversalModal from './UniversalModal';
 import useFiles from '../hooks/useFiles';
 import { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import { Menu } from 'lucide-react';
 
 export default function ClientApp() {
   const { fs, currentFolder, selectedItem, actions } = useFiles();
   const [view, setView] = useState('grid');
   const [modalConfig, setModalConfig] = useState(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Start collapsed (mobile default)
   const router = useRouter();
+
+  // Handle responsive sidebar: always open on desktop, collapsed on mobile
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
+      // On desktop, always open sidebar; on mobile, keep it collapsed
+      if (isDesktop) {
+        setSidebarCollapsed(false);
+      } else {
+        setSidebarCollapsed(true);
+      }
+    };
+
+    // Check on mount
+    checkScreenSize();
+
+    // Listen for resize events
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
   const handleItemClick = (id) => {
     actions.select(id);
   };
@@ -49,24 +71,44 @@ export default function ClientApp() {
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen overflow-hidden">
       <Sidebar
         fs={fs}
         currentFolder={currentFolder}
         actions={actions}
-        onOpenFile={handleOpenFile}  // ← Critical: pass to sidebar
+        onOpenFile={handleOpenFile}
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={() => {
+          // On desktop, prevent manual collapse (always open)
+          const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
+          if (!isDesktop) {
+            setSidebarCollapsed(!sidebarCollapsed);
+          }
+        }}
       />
 
-      <div className="flex-1 bg-gray-50 p-8 overflow-y-auto">
-        <Toolbar
-          actions={actions}
-          view={view}
-          onViewChange={setView}
-          selectedItem={selectedItem}
-          setModalConfig={setModalConfig}
-        />
+      <div className="flex-1 flex flex-col bg-gray-50 overflow-hidden">
+        {/* Mobile menu button - only show when sidebar is collapsed on mobile */}
+        {sidebarCollapsed && (
+          <button
+            onClick={() => setSidebarCollapsed(false)}
+            className="lg:hidden fixed top-4 left-4 z-30 p-2 bg-slate-900 text-white rounded-lg shadow-lg hover:bg-slate-800 transition"
+            aria-label="Open sidebar"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        )}
 
-        <h2 className="text-3xl font-bold text-gray-900 mb-6">
+        <div className="flex-1 overflow-y-auto p-4 lg:p-8">
+          <Toolbar
+            actions={actions}
+            view={view}
+            onViewChange={setView}
+            selectedItem={selectedItem}
+            setModalConfig={setModalConfig}
+          />
+
+        <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4 tracking-tight">
           {currentFolder?.name || 'My Files'}
         </h2>
 
@@ -78,6 +120,7 @@ export default function ClientApp() {
           view={view}
           setModalConfig={setModalConfig}
         />
+        </div>
       </div>
 
       <UniversalModal
